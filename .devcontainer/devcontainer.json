@@ -1,0 +1,14 @@
+{
+  "name": "SaltScale CadQuery",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {},
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y libgl1 libglx-mesa0 libglu1-mesa && pip install -r requirements.txt",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  }
+}
