@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+
+cad/exports/stl/*.stl
+cad/exports/step/*.step
+
+.vscode/
