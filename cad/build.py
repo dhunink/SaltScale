@@ -4,12 +4,16 @@ import cadquery as cq
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 from saltscale_base import bottom_segment, top_segment, assembly_preview
+from params import P
 from platform_v1 import platform_compound
 from platform_v2 import platform_v2_full
 from platform_v3 import platform_v3_full
 from sensor_module_v1 import sensor_module
 from sensor_module_v2 import sensor_module_v2
 from sensor_module_v3 import sensor_module_v3
+from platform_v4 import platform_v4_full
+from platform_v5 import platform_v5_segment, platform_v5_assembly
+from platform_v6 import platform_v6_segment, platform_v6_assembly
 
 BASE = os.path.dirname(__file__)
 STL = os.path.join(BASE, "exports", "stl")
@@ -73,6 +77,33 @@ cq.exporters.export(sensor_ph3, os.path.join(STL, "sensor_module_v3_sensor_place
 cq.exporters.export(assembly3, os.path.join(STEP, "sensor_module_v3_assembly.step"))
 
 print("Exported sensor_module_v3 parts to exports/stl and assembly to exports/step")
+
+# Export platform v4 (uses sensor_module_v3 architecture)
+platform4 = platform_v4_full()
+cq.exporters.export(platform4, os.path.join(STL, "platform_v4.stl"))
+cq.exporters.export(platform4, os.path.join(STEP, "platform_v4.step"))
+
+print("Exported platform_v4 to exports/stl and exports/step")
+
+# Export platform v5 segments and assembly
+for q in range(P.segment_count):
+    seg = platform_v5_segment(q)
+    cq.exporters.export(seg, os.path.join(STL, f"platform_v5_segment_{q}.stl"))
+    cq.exporters.export(seg, os.path.join(STEP, f"platform_v5_segment_{q}.step"))
+
+assembly5 = platform_v5_assembly()
+cq.exporters.export(assembly5, os.path.join(STEP, "platform_v5_assembly.step"))
+print("Exported platform_v5 segments and assembly to exports/stl and exports/step")
+
+# Export platform v6 segments and assembly (refinement of v5)
+for q in range(P.segment_count):
+    seg6 = platform_v6_segment(q)
+    cq.exporters.export(seg6, os.path.join(STL, f"platform_v6_segment_{q}.stl"))
+    cq.exporters.export(seg6, os.path.join(STEP, f"platform_v6_segment_{q}.step"))
+
+assembly6 = platform_v6_assembly()
+cq.exporters.export(assembly6, os.path.join(STEP, "platform_v6_assembly.step"))
+print("Exported platform_v6 segments and assembly to exports/stl and exports/step")
 
 print("Exported sensor_module_v1 to exports/stl and exports/step")
 print("Exported SaltScale CAD files to exports/stl and exports/step")
