@@ -5,7 +5,7 @@ class Params:
     # Tank / platform
     tank_diameter_mm: float = 290.0
     outer_diameter_mm: float = 320.0
-    centering_lip_inner_diameter_mm: float = 294.0
+    centering_lip_inner_diameter_mm: float = 300.0
     centering_lip_height_mm: float = 5.0
     segment_count: int = 4
     total_height_mm: float = 42.0

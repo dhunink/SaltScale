@@ -1,34 +1,31 @@
-# SaltScale Loadcell Specification v1
+# SaltScale Loadcell Specification v2 — four-sensor architecture
 
-## Selected loadcell
+## Selected sensors (architectural placeholder)
 
-Henk Maas LA360-C 50kg single-point loadcell.
+Project changed from a single central single-point loadcell to four distributed half-bridge style sensors (Kiwi / SparkFun style) rated ~50 kg each.
+
+## Placeholder CAD footprint used
+
+- Sensor footprint (placeholder): 38 x 38 mm (square)
+- Sensor height (placeholder): 12 mm
+- Planned sensor positions: radial 100 mm at angles 45°, 135°, 225°, 315°
 
 ## Reason
 
-- True single-point loadcell
-- Rated capacity: 50 kg
-- Suitable for weighing platforms up to 400 x 400 mm
-- SaltScale platform diameter: 320 mm
-- IP66
-- C3 accuracy class
-- Industrial supplier in the Netherlands
+- Four-sensor architecture distributes load and uses commodity low-cost sensors.
 
 ## Mechanical CAD status
 
-Exact mounting dimensions are not yet frozen.
+Exact sensor package and mounting geometry are not frozen. The CAD currently models a conservative placeholder box and support bosses to exercise the structural load path.
 
-Before final CAD mounting holes are modeled, request the datasheet or drawing from Henk Maas for:
+Before final mounting features are added, obtain from the chosen sensor vendor or product page:
 
-- overall length
-- overall width
-- height
-- mounting hole diameter
-- mounting hole spacing
-- cable exit position
-- recommended fastener size
+- exact footprint (length × width)
+- exact height
+- mounting tab/hole positions (if any)
+- recommended fastener type/size or adhesive strategy
 
 ## CAD rule
 
-Until exact dimensions are available, model the loadcell as a parametric placeholder.
-Do not hard-code mounting holes based on assumptions.
+- Model sensors as parametric placeholders (currently 38×38×12 mm).
+- Do not hard-code mounting holes until the sensor datasheet is available.
