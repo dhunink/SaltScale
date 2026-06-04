@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#fff" />
+  <!-- center/scale: 2 px per mm, center at (400,400) -->
+  <g transform="translate(400,400)">
+    <!-- Outer diameter 320 mm -> radius = 320 px -->
+    <circle r="320" fill="none" stroke="#222" stroke-width="2" />
+    <!-- Centering lip inner diameter 300 mm -> radius 300 px -->
+    <circle r="300" fill="none" stroke="#666" stroke-width="4" stroke-dasharray="6 4" />
+
+    <!-- Sensor module positions (radius 100 mm -> 200 px) -->
+    <!-- Draw sensor-supported zones (green) -->
+    <g id="sensors">
+      <!-- helper function positions at 45,135,225,315 degrees -->
+      <circle cx="141.42" cy="-141.42" r="40" fill="rgba(34,139,34,0.25)" stroke="#228B22" stroke-width="2" />
+      <circle cx="-141.42" cy="-141.42" r="40" fill="rgba(34,139,34,0.25)" stroke="#228B22" stroke-width="2" />
+      <circle cx="-141.42" cy="141.42" r="40" fill="rgba(34,139,34,0.25)" stroke="#228B22" stroke-width="2" />
+      <circle cx="141.42" cy="141.42" r="40" fill="rgba(34,139,34,0.25)" stroke="#228B22" stroke-width="2" />
+    </g>
+
+    <!-- Sensor module centers / labels -->
+    <g font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#111">
+      <text x="170" y="-170">Sensor module (45°)</text>
+      <text x="-320" y="-170">Sensor module (135°)</text>
+      <text x="-320" y="200">Sensor module (225°)</text>
+      <text x="170" y="200">Sensor module (315°)</text>
+    </g>
+
+    <!-- Overload pad / bypass zones (radius ~112 mm -> 224 px) -->
+    <g id="overload-pads" fill="#FFA500" stroke="#cc7000" stroke-width="1">
+      <rect x="220" y="-230" width="28" height="28" transform="rotate(45 234 214) translate(0,-14)" opacity="0.9" />
+      <rect x="-248" y="-230" width="28" height="28" transform="rotate(45 -234 214) translate(0,-14)" opacity="0.9" />
+      <rect x="-248" y="202" width="28" height="28" transform="rotate(45 -234 -202) translate(0,-14)" opacity="0.9" />
+      <rect x="220" y="202" width="28" height="28" transform="rotate(45 234 -202) translate(0,-14)" opacity="0.9" />
+    </g>
+
+    <!-- Bypass zone (annulus where global overload pads can engage) -->
+    <circle r="224" fill="none" stroke="rgba(220,20,60,0.45)" stroke-width="10" stroke-dasharray="8 6" />
+    <text x="240" y="-10" font-size="12" fill="#b22222">Possible bypass zone</text>
+
+    <!-- Arrows showing intended force path (conceptual top-down arrows) -->
+    <g stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrow)">
+      <!-- from top platform label to sensor zone (example) -->
+      <path d="M0,-360 L120,-220" />
+      <path d="M0,-360 L-120,-220" />
+      <path d="M0,360 L-120,220" />
+      <path d="M0,360 L120,220" />
+    </g>
+
+    <!-- Labels for upper/lower platform and overload stop -->
+    <g font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#000">
+      <text x="-25" y="-380">Upper platform</text>
+      <text x="-25" y="400">Lower platform</text>
+      <text x="260" y="-240" font-size="12">Overload stop</text>
+    </g>
+
+    <!-- Legend -->
+    <g transform="translate(-380,240)" font-family="Arial,Helvetica,sans-serif" font-size="12">
+      <rect x="0" y="0" width="14" height="14" fill="rgba(34,139,34,0.25)" stroke="#228B22" />
+      <text x="20" y="12">Sensor-supported load zone</text>
+      <rect x="0" y="20" width="14" height="14" fill="#FFA500" stroke="#cc7000" />
+      <text x="20" y="32">Module overload pad</text>
+      <circle cx="7" cy="62" r="7" fill="none" stroke="rgba(220,20,60,0.45)" stroke-width="6" />
+      <text x="20" y="68">Global bypass (overload) annulus</text>
+    </g>
+  </g>
+</svg>
