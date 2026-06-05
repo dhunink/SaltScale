@@ -176,10 +176,10 @@ def support_grate_fit_coupon_v1(p: ConceptV2Params = P) -> cq.Compound:
     end_stop = _box(5.0, p.grate_arm_width_mm + 8.0, 2.0, 11.5, 0.0, p.upper_thickness_mm - 2.0)
     carrier = carrier.union(end_stop)
     carrier = _engrave(carrier, "UPPER CARRIER", -30.0, 19.0, p.upper_thickness_mm, 4.0)
-    carrier = _engrave(carrier, "GRATE SLOT", -30.0, -19.0, p.upper_thickness_mm, 4.0)
+    carrier = _engrave(carrier, "SLOT", -30.0, -19.0, p.upper_thickness_mm, 4.0)
 
-    grate_tab = _box(68.0, p.grate_arm_width_mm, p.grate_thickness_mm, 62.0, 0.0)
-    grate_tab = _engrave(grate_tab, "GRATE TAB", 62.0, 0.0, p.grate_thickness_mm, 4.2)
+    grate_tab = _box(68.0, p.grate_arm_width_mm, p.grate_thickness_mm, 74.0, 0.0)
+    grate_tab = _engrave(grate_tab, "TAB", 74.0, 0.0, p.grate_thickness_mm, 4.2)
     return _compound([carrier, grate_tab])
 
 

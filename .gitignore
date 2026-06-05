@@ -1,7 +1,14 @@
 __pycache__/
 *.pyc
 
-cad/exports/stl/*.stl
-cad/exports/step/*.step
-
 .vscode/
+
+# Legacy flat export folders are intentionally unused.
+# cad/build.py writes tracked STL/STEP exports to active/validation/archive.
+cad/exports/stl/
+cad/exports/step/
+
+# Keep temporary/cache export artifacts out of Git.
+cad/exports/**/*.png
+cad/exports/**/*.tmp
+cad/exports/**/*.bak
