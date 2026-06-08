@@ -6,7 +6,8 @@ prototype-level details:
 
 - realistic replaceable 38 x 38 x 12 mm sensor stations
 - lower-only and upper-only segment joining features
-- M3 heat-set insert pockets, 4 mm dowel sockets, and seam bridge plates
+- validated captured M3 nut pockets, M3 bolt holes, and printed seam bridge plates
+- low-profile sensor locator geometry based on sensor_station_locator_v3
 - removable upper support grate for uncertain salt-container bottoms
 
 The model still avoids electronics and firmware packaging.
@@ -46,6 +47,9 @@ class ConceptV2Params:
     grate_arm_length_mm: float = 178.0
     grate_arm_width_mm: float = 22.0
     grate_hub_diameter_mm: float = 48.0
+    support_grate_clearance_per_side_mm: float = 0.4
+    support_grate_receiver_depth_mm: float = 4.0
+    support_grate_receiver_overlap_mm: float = 22.0
 
     # Sensor station
     sensor_radius_mm: float = 112.0
@@ -61,20 +65,30 @@ class ConceptV2Params:
     overload_stop_diameter_mm: float = 7.0
     overload_gap_mm: float = 1.0
 
-    # Same-layer segment joining
+    # Same-layer segment joining: validated default is M3 bolt + standard nut + printed bridge.
+    m3_clearance_diameter_mm: float = 3.4
+    captured_nut_across_flats_mm: float = 5.9
+    captured_nut_lip_across_flats_mm: float = 5.35
+    captured_nut_pocket_depth_mm: float = 3.0
+    captured_nut_lip_depth_mm: float = 0.7
+    seam_boss_diameter_mm: float = 13.0
+    seam_bolt_radii_mm: tuple[float, float] = (118.0, 146.0)
+    seam_feature_inset_deg: float = 4.5
+    seam_bridge_radius_mm: float = 132.0
+    seam_bridge_radial_len_mm: float = 64.0
+    seam_bridge_tangent_len_mm: float = 32.0
+    seam_bridge_height_mm: float = 4.0
+
+    # Labels: validated PETG default. Use engraved labels only on non-contact surfaces.
+    label_text_height_mm: float = 7.0
+    label_engrave_depth_mm: float = 0.8
+
+    # Legacy-only compatibility for archived superseded coupons.
+    # These are not used by the active concept_v2 segment geometry.
     m3_insert_diameter_mm: float = 4.8
     m3_insert_depth_mm: float = 5.0
-    m3_clearance_diameter_mm: float = 3.4
     dowel_diameter_mm: float = 4.2
     dowel_socket_depth_mm: float = 6.0
-    seam_boss_diameter_mm: float = 13.0
-    seam_insert_radii_mm: tuple[float, float] = (118.0, 146.0)
-    seam_dowel_radius_mm: float = 134.0
-    seam_feature_inset_deg: float = 4.5
-    seam_bridge_radius_mm: float = 124.0
-    seam_bridge_radial_len_mm: float = 72.0
-    seam_bridge_tangent_len_mm: float = 26.0
-    seam_bridge_height_mm: float = 3.0
 
 
 P = ConceptV2Params()
@@ -135,6 +149,61 @@ def _local_cylinder(
     return body.rotate((0, 0, 0), (0, 0, 1), angle_deg)
 
 
+def _hex_cut(
+    across_flats: float,
+    height: float,
+    radius: float,
+    angle_deg: float,
+    z: float,
+    radial_offset: float = 0.0,
+    tangent_offset: float = 0.0,
+) -> cq.Workplane:
+    diameter = 2.0 * across_flats / math.sqrt(3.0)
+    body = (
+        cq.Workplane("XY")
+        .polygon(6, diameter)
+        .extrude(height)
+        .rotate((0, 0, 0), (0, 0, 1), 30)
+        .translate((radius + radial_offset, tangent_offset, z))
+    )
+    return body.rotate((0, 0, 0), (0, 0, 1), angle_deg)
+
+
+def _engrave_top(
+    body: cq.Workplane,
+    label: str,
+    x: float,
+    y: float,
+    z: float,
+    size: float | None = None,
+    p: ConceptV2Params = P,
+) -> cq.Workplane:
+    text_size = p.label_text_height_mm if size is None else size
+    text = cq.Workplane("XY").workplane(offset=z).text(label, text_size, -p.label_engrave_depth_mm, combine=False)
+    return body.cut(text.translate((x, y, 0.0)))
+
+
+def _engrave_local(
+    body: cq.Workplane,
+    label: str,
+    radius: float,
+    angle_deg: float,
+    z: float,
+    radial_offset: float = 0.0,
+    tangent_offset: float = 0.0,
+    size: float | None = None,
+    p: ConceptV2Params = P,
+) -> cq.Workplane:
+    text_size = p.label_text_height_mm if size is None else size
+    text = (
+        cq.Workplane("XY")
+        .workplane(offset=z)
+        .text(label, text_size, -p.label_engrave_depth_mm, combine=False)
+        .translate((radius + radial_offset, tangent_offset, 0.0))
+    )
+    return body.cut(text.rotate((0, 0, 0), (0, 0, 1), angle_deg))
+
+
 def _slot_cut(
     radial_len: float,
     tangent_len: float,
@@ -154,49 +223,47 @@ def _segment_angles(quadrant: int, p: ConceptV2Params = P) -> tuple[float, float
     return start, end
 
 
-def _add_vertical_insert_features(
+def _add_captured_nut_seam_features(
     body: cq.Workplane,
     quadrant: int,
     z_base: float,
     thickness: float,
-    pocket_from_top: bool,
+    nut_from_top: bool,
     p: ConceptV2Params = P,
 ) -> cq.Workplane:
     start, end = _segment_angles(quadrant, p)
     feature_angles = (start + p.seam_feature_inset_deg, end - p.seam_feature_inset_deg)
 
     for angle in feature_angles:
-        for radius in p.seam_insert_radii_mm:
-            boss = _local_cylinder(p.seam_boss_diameter_mm, thickness, radius, angle, z_base)
-            body = body.union(boss)
+        for radius in p.seam_bolt_radii_mm:
+            body = body.union(_local_cylinder(p.seam_boss_diameter_mm, thickness, radius, angle, z_base))
+            body = body.cut(_local_cylinder(p.m3_clearance_diameter_mm, thickness + 0.6, radius, angle, z_base - 0.3))
 
-            if pocket_from_top:
-                pocket_z = z_base + thickness - p.m3_insert_depth_mm
+            if nut_from_top:
+                lip_z = z_base + thickness - p.captured_nut_lip_depth_mm
+                pocket_z = lip_z - p.captured_nut_pocket_depth_mm
             else:
-                pocket_z = z_base
-            insert_pocket = _local_cylinder(
-                p.m3_insert_diameter_mm,
-                p.m3_insert_depth_mm,
-                radius,
-                angle,
-                pocket_z,
-            )
-            body = body.cut(insert_pocket)
+                lip_z = z_base - 0.05
+                pocket_z = z_base + p.captured_nut_lip_depth_mm
 
-        dowel_boss = _local_cylinder(p.seam_boss_diameter_mm, thickness, p.seam_dowel_radius_mm, angle, z_base)
-        body = body.union(dowel_boss)
-        if pocket_from_top:
-            dowel_z = z_base + thickness - p.dowel_socket_depth_mm
-        else:
-            dowel_z = z_base
-        dowel_socket = _local_cylinder(
-            p.dowel_diameter_mm,
-            p.dowel_socket_depth_mm,
-            p.seam_dowel_radius_mm,
-            angle,
-            dowel_z,
-        )
-        body = body.cut(dowel_socket)
+            body = body.cut(
+                _hex_cut(
+                    p.captured_nut_lip_across_flats_mm,
+                    p.captured_nut_lip_depth_mm + 0.15,
+                    radius,
+                    angle,
+                    lip_z,
+                )
+            )
+            body = body.cut(
+                _hex_cut(
+                    p.captured_nut_across_flats_mm,
+                    p.captured_nut_pocket_depth_mm,
+                    radius,
+                    angle,
+                    pocket_z,
+                )
+            )
 
     return body
 
@@ -218,26 +285,33 @@ def _sensor_stack_heights(p: ConceptV2Params = P) -> dict[str, float]:
 def _sensor_station_lower_features(angle_deg: float, p: ConceptV2Params = P) -> cq.Workplane:
     h = _sensor_stack_heights(p)
     z = p.lower_thickness_mm
-    locator_span = p.lower_pad_size_mm + 1.2
-    wall_clearance = 0.8
-    rail_offset = locator_span / 2.0 + wall_clearance + p.guide_wall_thickness_mm / 2.0
-    rail_len = p.upper_pad_size_mm + 10.0
-    guide_h = min(p.guide_wall_height_mm, h["stop_top_z"] - z)
+    locator_h = 5.0
+    wall_t = p.guide_wall_thickness_mm
+    total_clearance = 1.0
+    cavity = p.sensor_size_mm + total_clearance
+    half = cavity / 2.0
 
-    left_rail = _local_box(rail_len, p.guide_wall_thickness_mm, guide_h, p.sensor_radius_mm, angle_deg, z, tangent_offset=rail_offset)
-    right_rail = _local_box(rail_len, p.guide_wall_thickness_mm, guide_h, p.sensor_radius_mm, angle_deg, z, tangent_offset=-rail_offset)
-    inner_stop = _local_box(
-        p.guide_wall_thickness_mm,
-        locator_span + 2.0 * p.guide_wall_thickness_mm,
-        guide_h,
-        p.sensor_radius_mm,
-        angle_deg,
-        z,
-        radial_offset=-(locator_span / 2.0 + wall_clearance + p.guide_wall_thickness_mm / 2.0),
-    )
+    # Low, broken v3-style locator features. They prevent sliding/rotation while
+    # keeping the outer side open for service and staying below upper-pad contact.
+    side_len = 19.0
+    side_x = -3.0
+    side_y = half + wall_t / 2.0
+    upper_side = _local_box(side_len, wall_t, locator_h, p.sensor_radius_mm, angle_deg, z, radial_offset=side_x, tangent_offset=side_y)
+    lower_side = _local_box(side_len, wall_t, locator_h, p.sensor_radius_mm, angle_deg, z, radial_offset=side_x, tangent_offset=-side_y)
+
+    inner_x = -(half + wall_t / 2.0)
+    inner_stop = _local_box(wall_t, 16.0, locator_h, p.sensor_radius_mm, angle_deg, z, radial_offset=inner_x)
+    inner_top = _local_cylinder(6.0, locator_h, p.sensor_radius_mm, angle_deg, z, radial_offset=inner_x, tangent_offset=13.5)
+    inner_bottom = _local_cylinder(6.0, locator_h, p.sensor_radius_mm, angle_deg, z, radial_offset=inner_x, tangent_offset=-13.5)
+
+    outer_x = half + wall_t / 2.0
+    outer_top = _local_cylinder(6.0, locator_h, p.sensor_radius_mm, angle_deg, z, radial_offset=outer_x, tangent_offset=14.0)
+    outer_bottom = _local_cylinder(6.0, locator_h, p.sensor_radius_mm, angle_deg, z, radial_offset=outer_x, tangent_offset=-14.0)
+    outer_top_tail = _local_box(8.0, wall_t, locator_h, p.sensor_radius_mm, angle_deg, z, radial_offset=outer_x - 4.0, tangent_offset=14.0)
+    outer_bottom_tail = _local_box(8.0, wall_t, locator_h, p.sensor_radius_mm, angle_deg, z, radial_offset=outer_x - 4.0, tangent_offset=-14.0)
 
     stop_h = h["stop_top_z"] - z
-    stop_offset = locator_span / 2.0 + p.guide_wall_thickness_mm + p.overload_stop_diameter_mm / 2.0 + 2.0
+    stop_offset = 31.0
     stops = []
     for radial_offset in (-stop_offset, stop_offset):
         for tangent_offset in (-stop_offset, stop_offset):
@@ -253,25 +327,41 @@ def _sensor_station_lower_features(angle_deg: float, p: ConceptV2Params = P) -> 
                 )
             )
 
-    body = left_rail.union(right_rail).union(inner_stop)
+    body = upper_side.union(lower_side).union(inner_stop).union(inner_top).union(inner_bottom)
+    body = body.union(outer_top).union(outer_bottom).union(outer_top_tail).union(outer_bottom_tail)
     for stop in stops:
         body = body.union(stop)
     return body
 
 
+def lower_pad(p: ConceptV2Params = P) -> cq.Workplane:
+    return cq.Workplane("XY").box(p.lower_pad_size_mm, p.lower_pad_size_mm, p.lower_pad_height_mm, centered=(True, True, False))
+
+
+def upper_pad(p: ConceptV2Params = P) -> cq.Workplane:
+    return cq.Workplane("XY").box(p.upper_pad_size_mm, p.upper_pad_size_mm, p.upper_pad_height_mm, centered=(True, True, False))
+
+
+def sensor_placeholder(p: ConceptV2Params = P) -> cq.Workplane:
+    body = cq.Workplane("XY").box(p.sensor_size_mm, p.sensor_size_mm, p.sensor_height_mm, centered=(True, True, False))
+    cable = cq.Workplane("XY").box(16.0, 4.0, 2.0, centered=(True, True, False)).translate((p.sensor_size_mm / 2.0 + 8.0, 0.0, 4.0))
+    return body.union(cable)
+
+
 def sensor_stack_parts(index: int, angle_deg: float, p: ConceptV2Params = P) -> list[tuple[str, cq.Workplane]]:
     h = _sensor_stack_heights(p)
-    lower_pad = _local_box(p.lower_pad_size_mm, p.lower_pad_size_mm, p.lower_pad_height_mm, p.sensor_radius_mm, angle_deg, h["lower_pad_z"])
-    sensor = _local_box(p.sensor_size_mm, p.sensor_size_mm, p.sensor_height_mm, p.sensor_radius_mm, angle_deg, h["sensor_z"])
-    upper_pad = _local_box(p.upper_pad_size_mm, p.upper_pad_size_mm, p.upper_pad_height_mm, p.sensor_radius_mm, angle_deg, h["upper_pad_z"])
+    lower_p = lower_pad(p).translate((p.sensor_radius_mm, 0, h["lower_pad_z"]))
+    sensor = sensor_placeholder(p).translate((p.sensor_radius_mm, 0, h["sensor_z"]))
+    upper_p = upper_pad(p).translate((p.sensor_radius_mm, 0, h["upper_pad_z"]))
 
-    cable_slot = _local_box(16.0, 4.0, 2.0, p.sensor_radius_mm, angle_deg, h["sensor_z"] + 4.0, radial_offset=p.sensor_size_mm / 2.0 + 8.0)
-    sensor = sensor.union(cable_slot)
+    lower_p = lower_p.rotate((0, 0, 0), (0, 0, 1), angle_deg)
+    sensor = sensor.rotate((0, 0, 0), (0, 0, 1), angle_deg)
+    upper_p = upper_p.rotate((0, 0, 0), (0, 0, 1), angle_deg)
 
     return [
-        (f"sensor_{index}_lower_contact_pad", lower_pad),
+        (f"sensor_{index}_lower_contact_pad", lower_p),
         (f"sensor_{index}_placeholder_with_cable_exit", sensor),
-        (f"sensor_{index}_upper_contact_pad", upper_pad),
+        (f"sensor_{index}_upper_contact_pad", upper_p),
     ]
 
 
@@ -285,8 +375,44 @@ def lower_segment(quadrant: int = 0, p: ConceptV2Params = P) -> cq.Workplane:
     segment = segment.union(_sensor_station_lower_features(sensor_angle, p))
 
     # Keep the lower pad on solid base material; guide walls provide lateral location.
-    segment = _add_vertical_insert_features(segment, quadrant, 0.0, p.lower_thickness_mm, True, p)
+    segment = _add_captured_nut_seam_features(segment, quadrant, 0.0, p.lower_thickness_mm, False, p)
+    mid_angle = (start + end) / 2.0
+    segment = _engrave_local(segment, "LOWER", 126.0, mid_angle, p.lower_thickness_mm, size=7.0, p=p)
+    segment = _engrave_local(segment, "OUT", 151.0, mid_angle, p.lower_thickness_mm, size=7.0, p=p)
     return segment
+
+
+
+def _add_support_grate_receivers(
+    segment: cq.Workplane,
+    quadrant: int,
+    inner_r: float,
+    p: ConceptV2Params = P,
+) -> cq.Workplane:
+    """Cut upper-only receivers for the removable support-grate cross arms.
+
+    The support grate is a cross-shaped upper-only part. Earlier concept_v2
+    receiver cuts only cleared small seam-adjacent tabs, which left a real
+    solid overlap between the grate and upper carrier. These full cross-arm
+    receivers clear the actual grate footprint using the validated 0.4 mm
+    per-side lateral clearance while preserving upper/lower separation.
+    """
+    slot_width = p.grate_arm_width_mm + 2.0 * p.support_grate_clearance_per_side_mm
+    slot_len = p.grate_arm_length_mm + 2.0 * p.support_grate_clearance_per_side_mm
+    slot_z = p.upper_z_mm + p.upper_thickness_mm - p.support_grate_receiver_depth_mm
+    cut_h = p.support_grate_receiver_depth_mm + 0.4
+
+    horizontal = (
+        cq.Workplane("XY")
+        .box(slot_len, slot_width, cut_h, centered=(True, True, False))
+        .translate((0.0, 0.0, slot_z))
+    )
+    vertical = (
+        cq.Workplane("XY")
+        .box(slot_width, slot_len, cut_h, centered=(True, True, False))
+        .translate((0.0, 0.0, slot_z))
+    )
+    return segment.cut(horizontal).cut(vertical)
 
 
 def upper_segment(quadrant: int = 0, p: ConceptV2Params = P) -> cq.Workplane:
@@ -297,6 +423,7 @@ def upper_segment(quadrant: int = 0, p: ConceptV2Params = P) -> cq.Workplane:
     inner_r = p.upper_inner_diameter_mm / 2.0
 
     segment = _annular_sector(outer_r, inner_r, p.upper_thickness_mm, start, end, p.upper_z_mm)
+    segment = _add_support_grate_receivers(segment, quadrant, inner_r, p)
     lip = _annular_sector(lip_outer_r, lip_inner_r, p.lip_height_mm, start, end, p.upper_z_mm + p.upper_thickness_mm)
     segment = segment.union(lip)
 
@@ -305,31 +432,57 @@ def upper_segment(quadrant: int = 0, p: ConceptV2Params = P) -> cq.Workplane:
     land = _local_box(p.upper_pad_size_mm + 4.0, p.upper_pad_size_mm + 4.0, 1.0, p.sensor_radius_mm, sensor_angle, p.upper_z_mm)
     segment = segment.union(land)
 
-    # Underside insert/dowel sockets for upper-only seam bridge plates.
-    segment = _add_vertical_insert_features(segment, quadrant, p.upper_z_mm, p.upper_thickness_mm, False, p)
+    # Top-side captured nut pockets for underside upper-only seam bridge plates.
+    segment = _add_captured_nut_seam_features(segment, quadrant, p.upper_z_mm, p.upper_thickness_mm, True, p)
+    mid_angle = (start + end) / 2.0
+    segment = _engrave_local(segment, "UPPER", 124.0, mid_angle, p.upper_z_mm + p.upper_thickness_mm, size=7.0, p=p)
     return segment
 
 
-def lower_seam_bridge(seam_angle: float, p: ConceptV2Params = P) -> cq.Workplane:
-    return _local_box(
+def _bridge_hole_centers(seam_angle: float, p: ConceptV2Params = P) -> list[tuple[float, float, float]]:
+    centers = []
+    for delta in (-p.seam_feature_inset_deg, p.seam_feature_inset_deg):
+        for radius in p.seam_bolt_radii_mm:
+            centers.append((radius, seam_angle + delta, delta))
+    return centers
+
+
+def _bridge_plate_local(label: str, p: ConceptV2Params = P) -> cq.Workplane:
+    bridge = cq.Workplane("XY").box(
         p.seam_bridge_radial_len_mm,
         p.seam_bridge_tangent_len_mm,
         p.seam_bridge_height_mm,
-        p.seam_bridge_radius_mm,
-        seam_angle,
-        p.lower_thickness_mm,
+        centered=(True, True, False),
     )
+    for delta in (-p.seam_feature_inset_deg, p.seam_feature_inset_deg):
+        for radius in p.seam_bolt_radii_mm:
+            x = radius * math.cos(math.radians(delta)) - p.seam_bridge_radius_mm
+            y = radius * math.sin(math.radians(delta))
+            cut = cq.Workplane("XY").circle(p.m3_clearance_diameter_mm / 2.0).extrude(p.seam_bridge_height_mm + 0.6).translate((x, y, -0.3))
+            bridge = bridge.cut(cut)
+    bridge = _engrave_top(bridge, label, -17.0, 8.0, p.seam_bridge_height_mm, size=6.8, p=p)
+    bridge = _engrave_top(bridge, "M3", 16.0, -8.0, p.seam_bridge_height_mm, p=p)
+    return bridge
+
+
+def lower_bridge_plate(p: ConceptV2Params = P) -> cq.Workplane:
+    return _bridge_plate_local("LOWER", p)
+
+
+def upper_bridge_plate(p: ConceptV2Params = P) -> cq.Workplane:
+    return _bridge_plate_local("UPPER", p)
+
+
+def _place_bridge_plate(bridge: cq.Workplane, seam_angle: float, z: float, p: ConceptV2Params = P) -> cq.Workplane:
+    return bridge.translate((p.seam_bridge_radius_mm, 0.0, z)).rotate((0, 0, 0), (0, 0, 1), seam_angle)
+
+
+def lower_seam_bridge(seam_angle: float, p: ConceptV2Params = P) -> cq.Workplane:
+    return _place_bridge_plate(lower_bridge_plate(p), seam_angle, p.lower_thickness_mm, p)
 
 
 def upper_seam_bridge(seam_angle: float, p: ConceptV2Params = P) -> cq.Workplane:
-    return _local_box(
-        p.seam_bridge_radial_len_mm,
-        p.seam_bridge_tangent_len_mm,
-        p.seam_bridge_height_mm,
-        p.seam_bridge_radius_mm,
-        seam_angle,
-        p.upper_z_mm - p.seam_bridge_height_mm,
-    )
+    return _place_bridge_plate(upper_bridge_plate(p), seam_angle, p.upper_z_mm - p.seam_bridge_height_mm, p)
 
 
 def support_grate(p: ConceptV2Params = P) -> cq.Workplane:
@@ -371,6 +524,115 @@ def concept_v2_assembly(p: ConceptV2Params = P) -> cq.Assembly:
         assembly.add(body, name=name)
     return assembly
 
+
+def concept_v2_exploded_assembly(p: ConceptV2Params = P) -> cq.Assembly:
+    assembly = cq.Assembly(name="SaltScale concept_v2 exploded")
+    for q in range(p.segment_count):
+        assembly.add(lower_segment(q, p), name=f"lower_segment_{q}")
+        assembly.add(upper_segment(q, p).translate((0, 0, 30.0)), name=f"upper_segment_{q}_raised")
+
+    for i, angle in enumerate((45.0, 135.0, 225.0, 315.0)):
+        for name, body in sensor_stack_parts(i, angle, p):
+            lift = 0.0
+            if "upper_contact" in name:
+                lift = 20.0
+            elif "placeholder" in name:
+                lift = 12.0
+            assembly.add(body.translate((0, 0, lift)), name=name)
+
+    for seam_angle in (0.0, 90.0, 180.0, 270.0):
+        assembly.add(lower_seam_bridge(seam_angle, p).translate((0, 0, 8.0)), name=f"lower_seam_bridge_{int(seam_angle)}_raised")
+        assembly.add(upper_seam_bridge(seam_angle, p).translate((0, 0, 22.0)), name=f"upper_seam_bridge_{int(seam_angle)}_raised")
+
+    assembly.add(support_grate(p).translate((0, 0, 45.0)), name="support_grate_raised")
+    return assembly
+
+
+
+def _m3_bolt_visual(height: float = 16.0, p: ConceptV2Params = P) -> cq.Workplane:
+    shaft = cq.Workplane("XY").circle(1.5).extrude(height)
+    head = cq.Workplane("XY").circle(3.0).extrude(2.0).translate((0, 0, height))
+    return shaft.union(head)
+
+
+def _m3_nut_visual(p: ConceptV2Params = P) -> cq.Workplane:
+    diameter = 2.0 * p.captured_nut_across_flats_mm / math.sqrt(3.0)
+    return cq.Workplane("XY").polygon(6, diameter).extrude(2.4).rotate((0, 0, 0), (0, 0, 1), 30)
+
+
+def _place_local(body: cq.Workplane, radius: float, angle_deg: float, z: float, radial_offset: float = 0.0, tangent_offset: float = 0.0) -> cq.Workplane:
+    return body.translate((radius + radial_offset, tangent_offset, z)).rotate((0, 0, 0), (0, 0, 1), angle_deg)
+
+def concept_v2_one_quadrant_assembly(p: ConceptV2Params = P) -> cq.Assembly:
+    assembly = cq.Assembly(name="SaltScale concept_v2 one quadrant")
+    q = 0
+    assembly.add(lower_segment(q, p), name="lower_segment_0")
+    assembly.add(upper_segment(q, p), name="upper_segment_0")
+    for name, body in sensor_stack_parts(0, 45.0, p):
+        assembly.add(body, name=name)
+    assembly.add(lower_seam_bridge(0.0, p), name="lower_bridge_left")
+    assembly.add(lower_seam_bridge(90.0, p), name="lower_bridge_right")
+    assembly.add(upper_seam_bridge(0.0, p), name="upper_bridge_left")
+    assembly.add(upper_seam_bridge(90.0, p), name="upper_bridge_right")
+    assembly.add(support_grate(p), name="support_grate_visual_full")
+    return assembly
+
+
+
+def concept_v2_one_quadrant_exploded_assembly(p: ConceptV2Params = P) -> cq.Assembly:
+    """True exploded view of one quadrant with realistic assembly order spacing."""
+    assembly = cq.Assembly(name="SaltScale concept_v2 one quadrant exploded")
+    q = 0
+    sensor_angle = 45.0
+
+    # Vertical stack explosion. XY remains aligned so the load path is obvious.
+    z_lower_segment = 0.0
+    z_lower_pad = 22.0
+    z_sensor = 38.0
+    z_upper_pad = 58.0
+    z_upper_segment = 82.0
+    z_support_grate = 118.0
+
+    assembly.add(lower_segment(q, p).translate((0, 0, z_lower_segment)), name="01_lower_segment_printed")
+
+    h = _sensor_stack_heights(p)
+    lower_p = lower_pad(p).translate((p.sensor_radius_mm, 0, z_lower_pad)).rotate((0, 0, 0), (0, 0, 1), sensor_angle)
+    sensor = sensor_placeholder(p).translate((p.sensor_radius_mm, 0, z_sensor)).rotate((0, 0, 0), (0, 0, 1), sensor_angle)
+    upper_p = upper_pad(p).translate((p.sensor_radius_mm, 0, z_upper_pad)).rotate((0, 0, 0), (0, 0, 1), sensor_angle)
+    assembly.add(lower_p, name="02_lower_pad_printed")
+    assembly.add(sensor, name="03_sensor_or_placeholder")
+    assembly.add(upper_p, name="04_upper_pad_printed")
+
+    upper_lift = z_upper_segment - p.upper_z_mm
+    assembly.add(upper_segment(q, p).translate((0, 0, upper_lift)), name="05_upper_segment_printed")
+    grate_lift = z_support_grate - p.grate_z_mm
+    assembly.add(support_grate(p).translate((0, 0, grate_lift)), name="06_support_grate_printed_0p4_clearance_default")
+
+    # Same-layer seam hardware is pulled outward and upward from each seam.
+    for seam_angle, side_name, tangent_shift in ((0.0, "left", -20.0), (90.0, "right", 20.0)):
+        lower_bridge = lower_seam_bridge(seam_angle, p).translate((0, 0, 12.0))
+        upper_bridge = upper_seam_bridge(seam_angle, p).translate((0, 0, upper_lift - 18.0))
+        assembly.add(lower_bridge, name=f"07_lower_bridge_plate_{side_name}_printed")
+        assembly.add(upper_bridge, name=f"08_upper_bridge_plate_{side_name}_printed")
+
+        for delta in (-p.seam_feature_inset_deg, p.seam_feature_inset_deg):
+            for i, radius in enumerate(p.seam_bolt_radii_mm):
+                angle = seam_angle + delta
+                # Lower bolts enter from above into underside captured nuts.
+                bolt = _place_local(_m3_bolt_visual(14.0, p), radius, angle, p.lower_thickness_mm + 19.0)
+                nut = _place_local(_m3_nut_visual(p), radius, angle, -8.0)
+                assembly.add(bolt, name=f"09_lower_m3_bolt_{side_name}_{int(delta*10)}_{i}")
+                assembly.add(nut, name=f"10_lower_captured_m3_nut_{side_name}_{int(delta*10)}_{i}")
+
+                # Upper bolts enter from below into top-side captured nuts.
+                upper_bolt_z = p.upper_z_mm + upper_lift - 23.0
+                upper_nut_z = p.upper_z_mm + p.upper_thickness_mm + upper_lift + 8.0
+                upper_bolt = _place_local(_m3_bolt_visual(14.0, p).rotate((0, 0, 0), (1, 0, 0), 180), radius, angle, upper_bolt_z)
+                upper_nut = _place_local(_m3_nut_visual(p), radius, angle, upper_nut_z)
+                assembly.add(upper_bolt, name=f"11_upper_m3_bolt_{side_name}_{int(delta*10)}_{i}")
+                assembly.add(upper_nut, name=f"12_upper_captured_m3_nut_{side_name}_{int(delta*10)}_{i}")
+
+    return assembly
 
 def concept_v2_compound(p: ConceptV2Params = P) -> cq.Compound:
     return cq.Compound.makeCompound([body.val() for _, body in concept_v2_parts(p)])
