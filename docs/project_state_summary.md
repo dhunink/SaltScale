@@ -36,6 +36,7 @@ Validated or accepted decisions:
 - Support grate default clearance: `0.4 mm per side`.
 - Low-profile sensor locator v3 direction is preferred over tall rectangular rails.
 - Default segment joining uses common M3 bolts and standard captured nuts.
+- Concept v4 seam locator clearance is validated at `0.3 mm per side`; M3 fasteners clamp and locators position.
 - Round Cup upper-pad locator is the accepted upper-pad positioning concept.
 
 Validated exports are in:
@@ -53,7 +54,7 @@ Open questions before full platform printing:
 - Sensor wiring strain relief and connector choice.
 - Real sensor fit in the locator station.
 - Whether integrated v4 seams tolerate repeated assembly cycles.
-- Whether upper/lower segment seams align well enough without metal dowels.
+- Whether full-size upper/lower segment seams preserve the validated `0.3 mm per side` locator feel over repeated assembly cycles.
 - Whether the full upper support grate still feels acceptable with `0.4 mm per side` clearance.
 - Long-term PETG creep under a 20-35 kg salt container.
 

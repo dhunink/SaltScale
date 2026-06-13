@@ -62,39 +62,45 @@ The lower visual bolt shaft points downward from the top-side head seat into the
 Upper ring:
 
 ```text
-bolt head above, recessed -> upper segment -> integrated underside lug -> captured nut below
+bolt head above, recessed -> upper segment/same-plane lug -> captured nut below
 ```
 
-The upper seam is now top-access for serviceability. The M3 button head sits in a top-side recess from `z = 31.2..33.0 mm`, flush with the upper carrier top surface. The shaft points downward into a captured nut in the underside lug at about `z = 21.85..24.25 mm`.
+The upper seam remains top-access for serviceability. The M3 button head sits in a top-side recess from `z = 31.2..33.0 mm`, flush with the upper carrier top surface. The integrated upper lug now starts at the same `z = 25.0 mm` lower plane as the main upper segment body, so the printable upper segment no longer rests on a lower protruding lug. The shaft points downward into a captured nut pocket that opens from the underside of the same-plane lug/body region.
 
 Visual M3 nuts include center holes so the bolt shaft and nut are represented as compatible physical hardware instead of overlapping solid placeholders.
 
 ## Upper Pad Locator
 
-Decision: use the accepted Round Cup carrier-relative upper-pad locator.
+Decision: retire the Round Cup as active upper-segment geometry.
 
-The rejected concepts have been removed from active v4:
+The Round Cup carrier-relative locator was selected earlier, but the integrated full assembly showed a practical printability problem: the cup/rim became downward geometry attached to the upper segment near the sensor stack. That made the upper segment harder to print flat and introduced confusing disk/ring bodies around the upper pad area.
+
+Rejected or inactive concepts:
 
 - Through-hole boss/socket through the upper carrier.
 - Sensor-relative upper pad locator.
 - Small underside locator tabs.
+- Round Cup underside cup/rim on the upper carrier.
 
 Current active method:
 
-- The upper pad is a separate removable round printed part.
-- Upper pad diameter: `56.0 mm`.
-- The upper carrier has one broad circular underside cup/rim around the pad.
-- Cup clearance target: `0.45 mm per side`.
-- The cup/rim is upper-only and never touches the lower base, lower pad, sensor, or overload stops.
-- The cup/rim prints as broad bottom-starting geometry in the current upper segment orientation; it is not a through-hole and does not use small tabs.
-- No fasteners retain the pad.
+- The upper segment has no sensor-area underside cup or circular land disk.
+- The upper segment has an open inner-edge notch at each sensor station. The notch is cut to the inner edge, not a blind underside pocket, so it remains support-free.
+- The upper pad remains a separate removable printed part.
+- Upper pad body: `40 mm` round body, `3 mm` thick.
+- Upper pad lower contact boss: `12 mm` round boss that contacts the Kiwi sensor's central load-entry region.
+- The pad has a `36 mm` upper locating lobe that drops into a matching open-to-inner-edge socket in the upper segment. This carrier-relative feature keeps the pad centered during handling while remaining removable by hand.
 - No text is placed on pad contact faces.
+- The assembly STEP shows the pad in installed orientation, with the boss downward.
+- The printable upper-pad STL is flipped so the broad body/key side prints flat on the bed and the `12 mm` boss prints upward without supports.
 
 The vertical load path remains:
 
 ```text
-upper carrier -> removable round upper pad -> sensor -> lower pad -> lower base
+upper carrier -> removable upper pad body -> 12 mm contact boss -> Kiwi sensor -> lower pad -> lower base
 ```
+
+Open validation note: the lobe/socket system should be checked physically for hand removability, pad centering, and whether it stays put during normal upper-carrier handling.
 
 ## Locator Geometry
 
@@ -106,7 +112,7 @@ Current locator parameters:
 - Tongue radial length: `22 mm`.
 - Tongue tangential width: `10 mm`.
 - Socket tangential width: `11 mm`.
-- Clearance target: about `0.5 mm per side`.
+- Validated clearance: `0.3 mm per side`. Physical testing showed `0.4 mm` and `0.5 mm` had unnecessary play, while `0.3 mm` remained easy to assemble and gave the best alignment.
 
 The locator is same-layer only:
 
@@ -123,13 +129,13 @@ The integrated lugs now include broad flat XY shoulders near the lug roots. Thes
 Generated seam validation coupons:
 
 ```text
-cad/exports/validation/stl/concept_v4_lower_integrated_seam_coupon_v1.stl
-cad/exports/validation/stl/concept_v4_upper_integrated_seam_coupon_v1.stl
+cad/exports/experimental/stl/concept_v4_lower_integrated_seam_coupon_v1.stl
+cad/exports/experimental/stl/concept_v4_upper_integrated_seam_coupon_v1.stl
 ```
 
 The coupons use cropped real v4 seam geometry and include:
 
-- Integrated lugs.
+- Integrated same-plane lugs.
 - M3 clearance holes.
 - Captured nut pockets.
 - Printed seam locator.
@@ -138,19 +144,20 @@ The coupons use cropped real v4 seam geometry and include:
 
 ## CAD Verification
 
-Sample checks after Round Cup integration:
+Sample checks after removing active Round Cup geometry:
 
 - Upper segment 0 vs round upper pad: `0.0 mm^3` overlap.
 - Upper segment 0 vs sensor placeholder: `0.0 mm^3` overlap.
 - Upper segment 0 vs lower pad: `0.0 mm^3` overlap.
 - Upper segment 0 vs lower segment 0: `0.0 mm^3` overlap.
 - Full upper carrier vs full lower base: `0.0 mm^3` overlap.
+- Upper segment material below main body plane: `0.0 mm^3`.
 - Upper fastener visuals vs full lower base: `0.0 mm^3` overlap.
 - Lower fastener visuals vs full upper carrier: `0.0 mm^3` overlap.
 - Support grate bars vs full upper carrier: `0.0 mm^3` overlap.
 - Support grate bars vs full lower base: `0.0 mm^3` overlap.
 
-The upper fastener visual bounding box is `z = 21.0..33.0 mm`. The upper button head portion is `z = 31.2..33.0 mm`, recessed from the top side. The captured nut visual sits below in the underside lug at about `z = 21.85..24.25 mm`.
+The upper fastener visual bounding box is now `z = 25.0..33.0 mm`. The upper button head portion is `z = 31.2..33.0 mm`, recessed from the top side. The captured nut visual sits in the same-plane lug/body underside pocket at about `z = 25.85..28.25 mm`.
 
 ## Service Note
 
@@ -161,7 +168,7 @@ Upper ring service is improved because upper seam bolts are now top-access. Remo
 Print first:
 
 ```text
-cad/exports/validation/stl/concept_v4_upper_integrated_seam_coupon_v1.stl
+cad/exports/experimental/stl/concept_v4_upper_integrated_seam_coupon_v1.stl
 ```
 
 Reason: it validates the integrated upper seam fastener and captured-nut details before full platform printing.
@@ -169,5 +176,5 @@ Reason: it validates the integrated upper seam fastener and captured-nut details
 Print second:
 
 ```text
-cad/exports/validation/stl/concept_v4_lower_integrated_seam_coupon_v1.stl
+cad/exports/experimental/stl/concept_v4_lower_integrated_seam_coupon_v1.stl
 ```

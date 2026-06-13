@@ -227,7 +227,7 @@ Design rules for locators:
 - Lower locators connect only lower-to-lower.
 - Upper locators connect only upper-to-upper.
 - No locator may bridge upper to lower.
-- Locator clearances should be PETG-friendly, likely around `0.3-0.5 mm per side` for non-sliding assembly features.
+- Locator clearance is now validated at `0.3 mm per side` for the concept v4 tongue/socket seam locator.
 - Locators should not be so tight that segment assembly requires hammering.
 
 ### 6. Integrated lug roots may be PETG stress concentrators
@@ -449,8 +449,9 @@ Current fastener assumption:
 Current locator geometry:
 
 - Printed tongue/socket at the same seam layer.
-- About `0.5 mm per side` PETG-friendly clearance.
+- Validated `0.3 mm per side` PETG-friendly clearance.
 - Bolts clamp; locators align.
+- `0.4 mm` and `0.5 mm` were physically tested and showed unnecessary play; no tighter variant is currently required.
 
 Verification checks after the CAD pass:
 
@@ -464,8 +465,8 @@ Verification checks after the CAD pass:
 Generated validation coupons:
 
 ```text
-cad/exports/validation/stl/concept_v4_lower_integrated_seam_coupon_v1.stl
-cad/exports/validation/stl/concept_v4_upper_integrated_seam_coupon_v1.stl
+cad/exports/experimental/stl/concept_v4_lower_integrated_seam_coupon_v1.stl
+cad/exports/experimental/stl/concept_v4_upper_integrated_seam_coupon_v1.stl
 ```
 
 Updated recommendation:

@@ -93,6 +93,24 @@ Decision:
 - If the full upper-carrier implementation still feels too loose, create and test a `0.2 mm per side` variant before changing the active design.
 - Future work may explore self-centering or tapered support-grate locator geometry, but that is an improvement path, not a reason to loosen the current default.
 
+## Concept v4 Seam Locator Clearance
+
+Physical result:
+
+- `0.5 mm per side` showed unnecessary play.
+- `0.4 mm per side` still showed unnecessary play.
+- `0.3 mm per side` remained easy to assemble.
+- `0.3 mm per side` provided the best alignment of the tested variants.
+- Locators are positioning features only.
+- M3 fasteners provide clamping.
+
+Decision:
+
+- Use `0.3 mm per side` as the active `concept_v4` seam locator clearance.
+- Do not create a tighter locator variant unless a future full-size segment print shows measurable play.
+- Keep M3 bolts responsible for clamping.
+- Keep printed locators responsible only for segment positioning.
+
 ## Future CAD Rule
 
 For all future CAD work:

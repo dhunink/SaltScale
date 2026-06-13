@@ -57,8 +57,18 @@ from concept_v4_integrated_joining import (
     concept_v4_exploded_assembly,
     concept_v4_lower_integrated_seam_coupon_v1,
     concept_v4_one_quadrant_assembly,
+    concept_v4_sensor_clip_station_coupon_v1,
+    concept_v4_sensor_clip_station_coupon_v2,
+    concept_v4_sensor_clip_station_open_closed_assembly,
     concept_v4_upper_integrated_seam_coupon_v1,
+    concept_v4_upper_pad_12mm_boss_test_v2,
+    concept_v4_lower_support_test_v1,
+    concept_v4_real_sensor_locator_test_v2,
+    concept_v4_real_sensor_locator_test_v3,
+    kiwi_sensor_reference_v1 as concept_v4_kiwi_sensor_reference_v1,
+    lower_pad as concept_v4_lower_pad,
     lower_segment as concept_v4_lower_segment,
+    sensor_quarter_turn_clip as concept_v4_sensor_quarter_turn_clip,
     support_grate_bar_x as concept_v4_support_grate_bar_x,
     support_grate_bar_y as concept_v4_support_grate_bar_y,
     upper_pad as concept_v4_upper_pad,
@@ -131,6 +141,15 @@ def _to_z0(obj: object) -> object:
     return obj
 
 
+def _upper_pad_print_orientation(obj: object) -> object:
+    # Assembly orientation has the 12 mm contact boss downward. Flip standalone
+    # pad exports so the broad 40 mm body prints flat on the bed and the boss
+    # builds upward without support.
+    if hasattr(obj, "rotate"):
+        return obj.rotate((0, 0, 0), (1, 0, 0), 180)
+    return obj
+
+
 def _export_printable_pair(obj: object, name: str, stl_dir: Path, step_dir: Path) -> None:
     printable = _to_z0(obj)
     _export_stl(printable, stl_dir / f"{name}.stl")
@@ -168,9 +187,11 @@ def _export_concept_v4_active() -> None:
     _export_printable_pair(concept_v4_upper_segment(0), "concept_v4_upper_segment_0", ACTIVE_STL, ACTIVE_STEP)
     _export_printable_pair(concept_v4_support_grate_bar_x(CONCEPT_V4_P), "concept_v4_support_grate_bar_x", ACTIVE_STL, ACTIVE_STEP)
     _export_printable_pair(concept_v4_support_grate_bar_y(CONCEPT_V4_P), "concept_v4_support_grate_bar_y", ACTIVE_STL, ACTIVE_STEP)
-    _export_printable_pair(lower_pad(CONCEPT_V4_P), "concept_v4_lower_pad", ACTIVE_STL, ACTIVE_STEP)
-    _export_printable_pair(concept_v4_upper_pad(CONCEPT_V4_P), "concept_v4_upper_pad", ACTIVE_STL, ACTIVE_STEP)
-    _export_printable_pair(sensor_placeholder(CONCEPT_V4_P), "concept_v4_sensor_placeholder", ACTIVE_STL, ACTIVE_STEP)
+    _export_printable_pair(concept_v4_lower_pad(CONCEPT_V4_P), "concept_v4_lower_pad", ACTIVE_STL, ACTIVE_STEP)
+    _export_printable_pair(_upper_pad_print_orientation(concept_v4_upper_pad(CONCEPT_V4_P)), "concept_v4_upper_pad", ACTIVE_STL, ACTIVE_STEP)
+    _export_printable_pair(concept_v4_sensor_quarter_turn_clip(CONCEPT_V4_P), "concept_v4_sensor_quarter_turn_clip", ACTIVE_STL, ACTIVE_STEP)
+    _export_printable_pair(concept_v4_kiwi_sensor_reference_v1(CONCEPT_V4_P), "concept_v4_sensor_placeholder", ACTIVE_STL, ACTIVE_STEP)
+    _export_printable_pair(concept_v4_kiwi_sensor_reference_v1(CONCEPT_V4_P), "concept_v4_kiwi_sensor_reference_v1", ACTIVE_STL, ACTIVE_STEP)
     print("Exported active concept_v4 integrated joining candidate files")
 
 
@@ -198,6 +219,13 @@ def _export_validation() -> None:
     )
     for name, body in micro_coupon_exports().items():
         _export_printable_pair(body, name, EXPERIMENTAL_STL, EXPERIMENTAL_STEP)
+    _export_printable_pair(_upper_pad_print_orientation(concept_v4_upper_pad_12mm_boss_test_v2()), "concept_v4_upper_pad_12mm_boss_test_v2", EXPERIMENTAL_STL, EXPERIMENTAL_STEP)
+    _export_printable_pair(concept_v4_lower_support_test_v1(), "concept_v4_lower_support_test_v1", EXPERIMENTAL_STL, EXPERIMENTAL_STEP)
+    _export_printable_pair(concept_v4_real_sensor_locator_test_v2(), "concept_v4_real_sensor_locator_test_v2", EXPERIMENTAL_STL, EXPERIMENTAL_STEP)
+    _export_printable_pair(concept_v4_real_sensor_locator_test_v3(), "concept_v4_real_sensor_locator_test_v3", EXPERIMENTAL_STL, EXPERIMENTAL_STEP)
+    _export_printable_pair(concept_v4_sensor_clip_station_coupon_v1(), "concept_v4_sensor_clip_station_coupon_v1", EXPERIMENTAL_STL, EXPERIMENTAL_STEP)
+    _export_printable_pair(concept_v4_sensor_clip_station_coupon_v2(), "concept_v4_sensor_clip_station_coupon_v2", EXPERIMENTAL_STL, EXPERIMENTAL_STEP)
+    _export_step(concept_v4_sensor_clip_station_open_closed_assembly(), EXPERIMENTAL_STEP / "concept_v4_sensor_clip_station_open_closed.step")
     print("Exported classified validation artifacts")
 
 
