@@ -1,30 +1,30 @@
 # SaltScale Project State Summary
 
-Date: 2026-06-07
+Date: 2026-06-15
 
 ## Current Active Architecture
 
-The active mechanical direction is `concept_v4_integrated_joining`.
+The active mechanical direction is now `concept_v5_cartridge_scale`.
 
 Current architecture:
 
 - Four Kiwi/SparkFun-style 50 kg load sensors.
 - Floating upper carrier over a lower base.
-- One sensor station per quadrant.
+- One removable sensor cartridge per quadrant.
+- Support-free over-wall cartridge retainer.
+- Validated cartridge locator walls: `7.1 mm` above the cartridge floor.
 - Upper and lower structures remain mechanically separate.
-- No upper-to-lower fasteners, clips, bridges, ribs, spacers, or locator features.
-- Integrated same-layer M3 segment joining.
-- Standard M3 bolts and standard captured M3 nuts.
-- No heat-set inserts or metal dowels by default.
-- Removable support grate with `0.4 mm per side` clearance.
-- Removable round upper pressure pad located by a broad Round Cup carrier locator.
+- No normal upper-to-lower fasteners or force-shunting contacts.
+- Captive load puck concept in the upper ring remains experimental.
+- Minimal metal fasteners remain preferred; use screws only where the print tests show they earn their keep.
 
 Start with:
 
 ```text
-cad/src/concept_v4_integrated_joining.py
-cad/exports/active/step/concept_v4_one_quadrant_assembly.step
-cad/exports/active/step/concept_v4_assembly.step
+cad/src/concept_v5_cartridge_scale.py
+cad/exports/concept_v5_cartridge/step/concept_v5_cartridge_assembly.step
+docs/concept_v5_cartridge_scale.md
+docs/concept_v5_system_architecture.md
 ```
 
 ## Validated Decisions
@@ -37,7 +37,11 @@ Validated or accepted decisions:
 - Low-profile sensor locator v3 direction is preferred over tall rectangular rails.
 - Default segment joining uses common M3 bolts and standard captured nuts.
 - Concept v4 seam locator clearance is validated at `0.3 mm per side`; M3 fasteners clamp and locators position.
-- Round Cup upper-pad locator is the accepted upper-pad positioning concept.
+- Round Cup upper-pad locator is retired from active geometry; the current pad uses a removable lobe/socket locator.
+- Measured Kiwi sensor dimensions are `34.07 mm` wide and `6.84 mm` thick.
+- Concept-v5 sensor cartridge with `7.1 mm` raised locator walls is physically validated: the sensor fit is snug with only minimal movement.
+- Concept-v5 over-wall retainer direction is the accepted cartridge baseline.
+- Hand-tight keyhole puck tests: `0.20 mm` is the best tested retention fit; `0.35 mm` and `0.50 mm` are too loose.
 
 Validated exports are in:
 
@@ -50,12 +54,12 @@ docs/validated/
 
 Open questions before full platform printing:
 
-- Real Kiwi/SparkFun sensor dimensions and tolerance.
+- Final captive puck architecture in the upper ring.
+- Whether puck retention should use top-down insertion plus keeper, a compliant latch, or a two-piece printed capture.
+- Long-term repeatability of the validated cartridge/retainer after repeated sensor service.
 - Sensor wiring strain relief and connector choice.
-- Real sensor fit in the locator station.
-- Whether integrated v4 seams tolerate repeated assembly cycles.
-- Whether full-size upper/lower segment seams preserve the validated `0.3 mm per side` locator feel over repeated assembly cycles.
-- Whether the full upper support grate still feels acceptable with `0.4 mm per side` clearance.
+- Segment joining strategy for the concept-v5 full ring.
+- Upper/lower lift retention with free play, without normal weighing contact.
 - Long-term PETG creep under a 20-35 kg salt container.
 
 ## Rejected Approaches
@@ -65,6 +69,7 @@ Rejected or superseded approaches:
 - Central single-point loadcell architecture.
 - `platform_v1` through `platform_v6` as active paths.
 - `concept_v1`, `concept_v2`, and `concept_v3` as active paths.
+- `concept_v4_integrated_joining` as the current active path; it remains useful prior art, but concept v5 supersedes it.
 - Upper pad through-hole boss/socket locator.
 - Upper pad sensor-relative locator.
 - Small underside-tab upper pad locator.
@@ -84,40 +89,21 @@ docs/rejected/
 Inspect first:
 
 ```text
-cad/exports/active/step/concept_v4_one_quadrant_assembly.step
+cad/exports/concept_v5_cartridge/step/concept_v5_cartridge_assembly.step
 ```
 
-Print next for mechanical fit validation:
+Print next for mechanical fit validation only if the generated files changed:
 
 ```text
-cad/exports/active/stl/concept_v4_upper_pad.stl
-cad/exports/active/stl/concept_v4_upper_segment_0.stl
+cad/exports/concept_v5_cartridge/stl/concept_v5_sensor_cartridge.stl
+cad/exports/concept_v5_cartridge/stl/concept_v5_sensor_retainer_clip.stl
 ```
 
 Purpose:
 
-- Validate the Round Cup pad fit in the real upper segment.
-- Confirm the pad is removable by hand.
-- Confirm the cup is clean and not fragile.
-- Inspect top-access upper M3 holes and support-grate receivers in the same real segment.
-
-If avoiding a large segment print, print current experimental seam coupons first:
-
-```text
-cad/exports/experimental/stl/concept_v4_upper_lug_recess_block_v1.stl
-cad/exports/experimental/stl/concept_v4_lower_lug_nut_block_v1.stl
-```
-
-## Waiting For Kiwi Hardware
-
-Do not finalize these until real hardware arrives:
-
-- Sensor pocket dimensions.
-- Upper/lower pad final contact geometry.
-- Cable exit and strain relief.
-- Sensor replacement procedure with real cable stiffness.
-- Load repeatability and calibration behavior.
-- Any electronics packaging.
+- Confirm the default exported cartridge is the validated `7.1 mm` wall version.
+- Confirm retainer fit still matches the physical test result.
+- Then continue with full upper/lower ring integration and the still-open puck capture design.
 
 ## Recommended Starting Files For New Contributors
 
@@ -126,16 +112,15 @@ Read in this order:
 ```text
 AGENTS.md
 docs/project_state_summary.md
-docs/active/concept_v4_integrated_joining.md
-docs/validated/design-decisions-validated.md
-docs/validated/segment-joining-strategy.md
+docs/concept_v5_cartridge_scale.md
+docs/concept_v5_system_architecture.md
 cad/exports/README.md
 ```
 
 Then inspect:
 
 ```text
-cad/exports/active/step/concept_v4_one_quadrant_assembly.step
-cad/exports/active/stl/concept_v4_upper_segment_0.stl
-cad/exports/active/stl/concept_v4_upper_pad.stl
+cad/exports/concept_v5_cartridge/step/concept_v5_cartridge_assembly.step
+cad/exports/concept_v5_cartridge/stl/concept_v5_sensor_cartridge.stl
+cad/exports/concept_v5_cartridge/stl/concept_v5_sensor_retainer_clip.stl
 ```

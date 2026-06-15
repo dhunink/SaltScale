@@ -2,6 +2,9 @@ __pycache__/
 *.pyc
 
 .vscode/
+.DS_Store
+**/.DS_Store
+node_modules/
 
 # Legacy flat export folders are intentionally unused.
 # cad/build.py writes tracked STL/STEP exports to active/validation/archive.
@@ -12,3 +15,22 @@ cad/exports/step/
 cad/exports/**/*.png
 cad/exports/**/*.tmp
 cad/exports/**/*.bak
+
+# Local CAD Viewer conversion cache artifacts.
+cad/exports/**/*.step.glb
+cad/exports/**/*.stl.glb
+cad/exports/**/.*.step.glb
+cad/exports/**/.*.stl.glb
+
+# Transient concept-v5 fit-test exports. Keep the Python sources and docs in
+# Git; regenerate these coupons locally when needed.
+cad/exports/concept_v5_clamp_variants/
+cad/exports/concept_v5_contact_tests/
+cad/exports/concept_v5_hand_tight_keyhole_tests/
+cad/exports/concept_v5_overwall_plus_1p5/
+cad/exports/concept_v5_puck_cage_tests/
+cad/exports/concept_v5_system_interface/
+
+# Superseded local v4 boss coupons from physical-fit exploration.
+cad/exports/experimental/step/concept_v4_upper_pad_*_boss_test_v1.step
+cad/exports/experimental/stl/concept_v4_upper_pad_*_boss_test_v1.stl

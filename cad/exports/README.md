@@ -2,13 +2,53 @@
 
 Generated CAD exports are intentionally kept in the repository so builders can inspect and slice the current design without installing CadQuery first.
 
+## Current Baseline
+
+Active architecture: `concept_v5_cartridge_scale`.
+
+Recommended first STEP to inspect:
+
+```text
+cad/exports/concept_v5_cartridge/step/concept_v5_cartridge_assembly.step
+```
+
+Validated printable cartridge parts:
+
+```text
+cad/exports/concept_v5_cartridge/stl/concept_v5_sensor_cartridge.stl
+cad/exports/concept_v5_cartridge/stl/concept_v5_sensor_retainer_clip.stl
+```
+
+Current validated details:
+
+- Four-sensor cartridge architecture.
+- Measured sensor body: about `34.07 mm` wide and `6.84 mm` thick.
+- Raised sensor-cartridge locator walls: `7.1 mm` above the cartridge floor.
+- Support-free over-wall cartridge retainer.
+- Physical test result: sensor fit is snug with only minimal movement.
+
+Still experimental:
+
+- Upper-ring load puck retention.
+- The `0.20 mm` hand-tight keyhole test is the best tested puck fit so far:
+  it does not fall out when inverted, but it is still removable by hand and is
+  not yet considered a captive/hand-tight final solution.
+- `0.35 mm` and `0.50 mm` hand-tight keyhole variants are too loose.
+- PETG did not flex enough for the intended side-slide insertion; current tests
+  only install by pressing the puck in from above.
+
 ## Folder Map
+
+### `concept_v5_cartridge/`
+
+Current baseline exports for the removable sensor cartridge concept.
 
 ### `active/`
 
-Current active design only.
+Legacy active design from the previous v4 architecture. It is retained as prior
+art until the full v5 ring replaces it.
 
-Active architecture: `concept_v4_integrated_joining`.
+Legacy architecture: `concept_v4_integrated_joining`.
 
 Recommended first STEP to inspect:
 
@@ -50,7 +90,8 @@ Active v4 includes:
 
 ### `validated/`
 
-Validation artifacts that represent accepted decisions.
+Older validation artifacts that represent accepted v4-era decisions. Some of
+these decisions still inform v5, but this folder is not the current print list.
 
 Examples:
 
@@ -63,7 +104,7 @@ cad/exports/validated/stl/label_readability_coupon_v1.stl
 
 ### `experimental/`
 
-Useful experiments that are not the active default.
+Useful v4-era experiments that are not the active default.
 
 Examples:
 
